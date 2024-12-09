@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>TEst 2</title>
+        <title>From fithub</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
