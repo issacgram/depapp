@@ -83,7 +83,12 @@ task('deploy-version', function () {
 // Hosts
 host('89.116.48.146')
     ->set('remote_user', 'deployuser')
-    ->set('deploy_path', '/var/www/phpgram.info');
+    ->set('deploy_path', '/var/www/phpgram.info')
+    ->set('ssh_arguments', [
+        '-o UserKnownHostsFile=/dev/null',
+        '-o StrictHostKeyChecking=no'
+    ])
+    ->set('keep_releases', 5);
 
 // Task ordering
 before('deploy:symlink', 'fix:permissions');
