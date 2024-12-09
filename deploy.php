@@ -1,5 +1,6 @@
 <?php
 namespace Deployer;
+
 require 'recipe/laravel.php';
 
 // Config
@@ -8,58 +9,67 @@ set('git_tty', false);
 set('ssh_multiplexing', false);
 set('debug', true);
 
-// Environment and shared configuration
-add('shared_files', [
-    '.env'
-]);
-
-add('shared_dirs', [
-    'storage',
-    'bootstrap/cache'
-]);
-
-add('writable_dirs', [
-    'bootstrap/cache',
-    'storage',
-    'storage/app',
-    'storage/app/public',
-    'storage/framework',
-    'storage/framework/cache',
-    'storage/framework/sessions',
-    'storage/framework/views',
-    'storage/logs'
-]);
-
-// Custom deploy-changes task
-desc('Push changes and deploy');
-task('deploy-changes', function () {
+// Version management
+set('app_version', function () {
     try {
-        // First unlock any existing deployment
-        invoke('deploy:unlock');
+        $envContent = file_get_contents('.env');
+        if (preg_match('/APP_VERSION=([0-9]+\.[0-9]+\.[0-9]+)/', $envContent, $matches)) {
+            $currentVersion = $matches[1];
+        } else {
+            $currentVersion = '1.0.0';
+        }
         
+        $versionParts = explode('.', $currentVersion);
+        $versionParts[2] = (int)$versionParts[2] + 1;
+        return implode('.', $versionParts);
+    } catch (\Exception $e) {
+        return '1.0.0';
+    }
+});
+
+// Deploy version task
+desc('Deploy with version tag');
+task('deploy-version', function () {
+    try {
+        // Unlock any existing deployment
+        invoke('deploy:unlock');
+
+        $newVersion = get('app_version');
+        
+        // Update .env file
+        if (file_exists('.env')) {
+            $envContent = file_get_contents('.env');
+            $envContent = preg_replace(
+                '/APP_VERSION=.*/',
+                'APP_VERSION=' . $newVersion,
+                $envContent
+            );
+            file_put_contents('.env', $envContent);
+        }
+
         // Git operations
         runLocally('git add .');
-        $commitMessage = ask('Enter commit message', 'Update changes');
+        $commitMessage = ask('Enter commit message', 'Release version ' . $newVersion);
         runLocally('git commit -m "' . $commitMessage . '"');
-        runLocally('git push origin main');
-        
+        runLocally('git tag -a v' . $newVersion . ' -m "Version ' . $newVersion . '"');
+        runLocally('git push origin main --tags');
+
         // Deploy
         invoke('deploy');
+
+        writeln("<info>Successfully deployed version " . $newVersion . "</info>");
     } catch (\Exception $e) {
         invoke('deploy:unlock');
         throw $e;
     }
 });
 
-// Hosts
+// Rest of your existing configuration...
 host('89.116.48.146')
     ->set('remote_user', 'deployuser')
     ->set('deploy_path', '/var/www/phpgram.info');
 
-// Deployment tasks
 after('deploy:failed', 'deploy:unlock');
-
-// Optional but recommended - add deployment success notification
 after('deploy:success', 'artisan:cache:clear');
 after('deploy:success', 'artisan:config:cache');
 after('deploy:success', 'artisan:route:cache');
