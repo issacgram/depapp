@@ -1,11 +1,9 @@
 <?php
 namespace Deployer;
-
 require 'recipe/laravel.php';
 
 // Config
 set('repository', 'https://github.com/issacgram/depapp.git');
-
 set('git_tty', false);
 set('ssh_multiplexing', false);
 set('debug', true);
@@ -32,14 +30,25 @@ add('writable_dirs', [
     'storage/logs'
 ]);
 
-
+// Custom deploy-changes task
 desc('Push changes and deploy');
 task('deploy-changes', function () {
-    runLocally('git add .');
-    $commitMessage = ask('Enter commit message', 'Update changes');
-    runLocally('git commit -m "' . $commitMessage . '"');
-    runLocally('git push origin main');
-    invoke('deploy');
+    try {
+        // First unlock any existing deployment
+        invoke('deploy:unlock');
+        
+        // Git operations
+        runLocally('git add .');
+        $commitMessage = ask('Enter commit message', 'Update changes');
+        runLocally('git commit -m "' . $commitMessage . '"');
+        runLocally('git push origin main');
+        
+        // Deploy
+        invoke('deploy');
+    } catch (\Exception $e) {
+        invoke('deploy:unlock');
+        throw $e;
+    }
 });
 
 // Hosts
