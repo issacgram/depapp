@@ -41,7 +41,7 @@ task('deploy-changes', function () {
         runLocally('git add .');
         $commitMessage = ask('Enter commit message', 'Update changes');
         runLocally('git commit -m "' . $commitMessage . '"');
-        runLocally('git push origin main');
+        runLocally('git push origin 1.x');
         
         // Deploy
         invoke('deploy');
@@ -57,6 +57,10 @@ host('89.116.48.146')
     ->set('remote_user', 'deployuser')
     ->set('deploy_path', '/var/www/phpgram.info');
 
+
+    before('deploy:symlink', 'fix:permissions');
+
+
 // Deployment tasks
 after('deploy:failed', 'deploy:unlock');
 
@@ -65,3 +69,5 @@ after('deploy:success', 'artisan:cache:clear');
 after('deploy:success', 'artisan:config:cache');
 after('deploy:success', 'artisan:route:cache');
 after('deploy:success', 'artisan:view:cache');
+
+
