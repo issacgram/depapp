@@ -27,6 +27,19 @@ set('app_version', function () {
     }
 });
 
+// Create GitHub release task
+task('create-github-release', function() {
+    $version = get('app_version');
+    runLocally('gh release create v' . $version . ' --title "Release v' . $version . '" --notes "Release version ' . $version . '"');
+});
+
+// Fix permissions task
+task('fix:permissions', function () {
+    run('chmod -R 775 {{release_path}}/storage');
+    run('chmod -R 775 {{release_path}}/bootstrap/cache');
+    run('chown -R deployuser:www-data {{release_path}}');
+});
+
 // Deploy version task
 desc('Deploy with version tag');
 task('deploy-version', function () {
@@ -54,6 +67,9 @@ task('deploy-version', function () {
         runLocally('git tag -a v' . $newVersion . ' -m "Version ' . $newVersion . '"');
         runLocally('git push origin main --tags');
 
+        // Create GitHub release
+        invoke('create-github-release');
+
         // Deploy
         invoke('deploy');
 
@@ -64,11 +80,13 @@ task('deploy-version', function () {
     }
 });
 
-// Rest of your existing configuration...
+// Hosts
 host('89.116.48.146')
     ->set('remote_user', 'deployuser')
     ->set('deploy_path', '/var/www/phpgram.info');
 
+// Task ordering
+before('deploy:symlink', 'fix:permissions');
 after('deploy:failed', 'deploy:unlock');
 after('deploy:success', 'artisan:cache:clear');
 after('deploy:success', 'artisan:config:cache');
