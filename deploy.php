@@ -33,7 +33,14 @@ add('writable_dirs', [
 ]);
 
 
-
+desc('Push changes and deploy');
+task('deploy-changes', function () {
+    runLocally('git add .');
+    $commitMessage = ask('Enter commit message', 'Update changes');
+    runLocally('git commit -m "' . $commitMessage . '"');
+    runLocally('git push origin main');
+    invoke('deploy');
+});
 
 // Hosts
 host('89.116.48.146')
