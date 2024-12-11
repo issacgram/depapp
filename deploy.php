@@ -38,11 +38,18 @@ task('deploy-changes', function () {
         // First unlock any existing deployment
         invoke('deploy:unlock');
         
-        // Git operations
-        runLocally('git add .');
-        $commitMessage = ask('Enter commit message', 'Update changes');
-        runLocally('git commit -m "' . $commitMessage . '"');
-        runLocally('git push origin 1.x');
+        // Check if there are any changes to commit
+        $hasChanges = trim(runLocally('git status --porcelain'));
+        
+        if (!empty($hasChanges)) {
+            writeln('Changes detected, committing...');
+            runLocally('git add .');
+            $commitMessage = ask('Enter commit message', 'Update changes');
+            runLocally('git commit -m "' . $commitMessage . '"');
+            runLocally('git push origin 1.x');
+        } else {
+            writeln('No changes to commit, proceeding with deployment...');
+        }
         
         // Deploy
         invoke('deploy');
