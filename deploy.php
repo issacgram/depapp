@@ -3,7 +3,7 @@ namespace Deployer;
 require 'recipe/laravel.php';
 
 // Config
-set('repository', 'https://github.com/issacgram/depapp.git');
+set('repository', 'https://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@github.com/issacgram/deplara.git');
 set('git_tty', false);
 set('ssh_multiplexing', false);
 set('debug', true);
@@ -52,12 +52,18 @@ task('deploy-changes', function () {
 });
 
 
+// Fix permissions task
+task('fix:permissions', function () {
+    run('chmod -R 775 {{release_path}}/storage');
+    run('chmod -R 775 {{release_path}}/bootstrap/cache');
+    run('chown -R deployuser:www-data {{release_path}}');
+});
+
+
 // Hosts
 host('89.116.48.146')
     ->set('remote_user', 'deployuser')
-    ->set('deploy_path', '/var/www/phpgram.info');
-
-
+    ->set('deploy_path', '/srv/phpgram.info');
     before('deploy:symlink', 'fix:permissions');
 
 
