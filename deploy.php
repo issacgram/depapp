@@ -3,10 +3,11 @@ namespace Deployer;
 require 'recipe/laravel.php';
 
 // Config
-set('repository', 'https://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@github.com/issacgram/deplara.git');
+set('repository', 'git@github.com:issacgram/deplara.git');
 set('git_tty', false);
 set('ssh_multiplexing', false);
 set('debug', true);
+
 
 // Environment and shared configuration
 add('shared_files', [
