@@ -4,7 +4,7 @@ require 'recipe/laravel.php';
 
 // Config
 set('repository', 'git@github.com:issacgram/deplara.git');
-set('git_tty', false);
+set('git_tty', true);
 set('ssh_multiplexing', false);
 set('debug', true);
 
